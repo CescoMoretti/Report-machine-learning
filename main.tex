@@ -1,0 +1,85 @@
+\documentclass[12pt,a4paper]{article}
+\usepackage[affil-it]{authblk}
+
+
+% Adjusting margins to personal my need
+\addtolength{\oddsidemargin}{-.5in}
+\addtolength{\evensidemargin}{-.5in}
+\addtolength{\textwidth}{1in}
+\addtolength{\topmargin}{-.5in}
+\addtolength{\textheight}{1in}
+
+% Graphics
+\usepackage{caption}
+\usepackage{subcaption}
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+
+% Math
+\usepackage{amssymb}
+\usepackage{amsmath} % Required for some math elements 
+
+% Other
+\usepackage{algorithmic}
+\usepackage{array}
+\usepackage{lipsum}
+\usepackage{hyperref}
+
+
+
+\renewcommand{\contentsname}{Indice}
+
+
+
+%----------------------------------------------------------------------------------------
+%	MAIN PART - Modify here
+%----------------------------------------------------------------------------------------
+
+\begin{document}
+
+\title{SkillCraftI\\
+\Large{Report per l'Esame di Fondameti di Machine Learning}
+}% Title
+\author{\textsc{Francesco Moretti} \\
+    \emph{130301} \\
+    Corso di Laurea\\
+    \emph{260877@studenti.unimore.it}
+  }
+\date{}
+\maketitle
+\clearpage
+%----------------------------------------------------------------------------------------
+%	Legenda
+%----------------------------------------------------------------------------------------
+
+\tableofcontents{}
+\clearpage
+
+%----------------------------------------------------------------------------------------
+%	Abstract
+%----------------------------------------------------------------------------------------
+\begin{abstract}
+\normalsize
+Abstract 
+
+
+\end{abstract}
+\clearpage
+
+%----------------------------------------------------------------------------------------
+%	Main Part
+%----------------------------------------------------------------------------------------
+\input{sections/s1}
+\input{sections/s2}
+\input{sections/s3}
+\input{sections/s4}
+\input{sections/s5}
+
+%----------------------------------------------------------------------------------------
+%	Bibliography
+%----------------------------------------------------------------------------------------
+\clearpage
+\bibliography{bibliography/biblio}{}
+\bibliographystyle{plain}
+
+\end{document}

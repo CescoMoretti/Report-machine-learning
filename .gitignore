@@ -1,0 +1,8 @@
+# Ignore everything
+*
+#but keep
+!.gitignore
+!main.pdf
+!main.tex
+
+!*/
