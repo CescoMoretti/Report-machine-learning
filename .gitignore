@@ -4,5 +4,8 @@
 !.gitignore
 !main.pdf
 !main.tex
-
+!/code
+!/figures
+!/sections
+!/bibliography
 !*/
