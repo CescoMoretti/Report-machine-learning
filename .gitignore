@@ -1,6 +1,7 @@
 # Ignore everything
 *
 #but keep
+!README.md
 !.gitignore
 !main.pdf
 !main.tex
