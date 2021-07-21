@@ -5,8 +5,8 @@
 !.gitignore
 !main.pdf
 !main.tex
-!/code
-!/figures
-!/sections
-!/bibliography
+!/code/*
+!/figures/*
+!/sections/*
+!/bibliography/*
 !*/
