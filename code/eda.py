@@ -77,7 +77,7 @@ plt.show() # il grafico non è chiarissimo per via del grosso numero di feature,
            # è meglio guardare la correlazione tra le feature tra di loro con una
            # matrice di correlazione e il tipo di relazione con la variabile target
            # in un pairplot a parte
-'''
+
 #plot della riga prima riga del pairplot
 sea.set(font_scale=0.5)
 p1 = sea.pairplot(data=df, y_vars=['LeagueIndex'],
@@ -96,7 +96,7 @@ p3 = sea.pairplot(data=df, y_vars=['LeagueIndex'], x_vars=['TotalMapExplored','W
 p3._legend.remove()
 p3.savefig('p3.png', dpi=300)
 plt.close(p3.fig)
-
+'''
 f, axes = plt.subplots(3, 1)
 
 axes[0].imshow(mpimg.imread('pairplot_parziale/p1.png'))
@@ -122,11 +122,20 @@ plt.show()
 
 #controllo se il dataset è sbilanciato
 
+
 u, inv = np.unique(df['LeagueIndex'], return_inverse=True)
 counts = np.bincount(inv)
-plt.bar(u, counts, width=0.3)
+fig, ax = plt.subplots()
+
+b =plt.bar(u, counts, width=0.3)
 plt.xticks(range(1, 9))
 plt.title("Bilanciamento del dataset")
+
+for bar in b:
+    height = bar.get_height()
+    ax.text(bar.get_x() +bar.get_width()/2., 0.99*height,
+            '%.2f' % float(height/sum(u)) + "%", ha='center', va='bottom')
+
 plt.show()
 
 
