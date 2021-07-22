@@ -24,35 +24,45 @@ z = df[df['HoursPerWeek'].isnull()]
 k = df[df['TotalHours'].isnull()]
  
 bins = np.linspace(0, 9, 15)
-plt.hist([y['LeagueIndex'], z['LeagueIndex'], k['LeagueIndex']], bins, label=['Age', 'HoursPerWeek', 'TotalHours'])
-plt.xlabel('League Index')
+plt.hist([y['LeagueIndex'], z['LeagueIndex'], k['LeagueIndex']],
+          bins, 
+          label=['Age', 'HoursPerWeek', 'TotalHours'])
+plt.title("Distribuzione elementi nulli")
+plt.xlabel('Indice della lega')
 plt.xticks(range(1, 9))
 plt.legend(loc='upper left')
 plt.show()
 
 #controllo quanti nulli ci sono nella lega 8
 x = df.loc[df['LeagueIndex'] == 8]
-print(x)
+print(x) #--> queste colonne sono nulle per tutti i valori della classe 8
 
 #guardo la correlazione di queste colonne con LeagueIndex
 
 cor_mat = df.corr()
-h = sea.heatmap(cor_mat, annot=True)
+
+sea.set(font_scale=0.8)
+h = sea.heatmap(cor_mat, annot=True, fmt='.3f')
+h.set_title("Matrice di correlazione - tutte le feature", size=12)
+plt.setp(h.get_xticklabels(), rotation=35, ha="right",
+         rotation_mode="anchor")
+
+
 plt.show()
 
 #le colonne Age, HoursPerWeek e TotalHours sono nulle in tutte le righe della lega 8 e in più hanno dei livelli di correlazione con
 # LeagueIndex bassi, quindi decido di scartare le colonne. Tolgo anche GameId perchè non lo ritengo fuzionale all'algoritmo
 
-x_df = df.drop(columns=['LeagueIndex','Age', 'HoursPerWeek', 'TotalHours', 'GameID']) 
+df = df.drop(columns=['Age', 'HoursPerWeek', 'TotalHours', 'GameID']) 
 
 
 
-print(x_df.isnull().sum())
+print(df.isnull().sum())
 #Non ci sono altri NAN
 
 #Guardo che tipo di relazione hanno le features tra di loro
 
-sea.set(font_scale=0.5)
+'''sea.set(font_scale=0.5)
 p = sea.pairplot(df[['LeagueIndex','APM','SelectByHotkeys','AssignToHotkeys','UniqueHotkeys',
                 'MinimapAttacks','MinimapRightClicks','NumberOfPACs','GapBetweenPACs',
                 'ActionLatency','ActionsInPAC','TotalMapExplored','WorkersMade','UniqueUnitsMade',
@@ -63,19 +73,26 @@ p = sea.pairplot(df[['LeagueIndex','APM','SelectByHotkeys','AssignToHotkeys','Un
                  line_kws={'color': 'red'}  )) 
 p.set(xticklabels=[])
 p.set(yticklabels=[])
-plt.show()
-
+plt.show() # il grafico non è chiarissimo per via del grosso numero di feature,
+           # è meglio guardare la correlazione tra le feature tra di loro con una
+           # matrice di correlazione e il tipo di relazione con la variabile target
+           # in un pairplot a parte
+'''
 #plot della riga prima riga del pairplot
-p1 = sea.pairplot(data=x_df, y_vars=['LeagueIndex'], x_vars=['APM','SelectByHotkeys','AssignToHotkeys','UniqueHotkeys','MinimapAttacks'], hue='LeagueIndex', palette='crest')
+sea.set(font_scale=0.5)
+p1 = sea.pairplot(data=df, y_vars=['LeagueIndex'],
+                  x_vars=['APM','SelectByHotkeys','AssignToHotkeys','UniqueHotkeys','MinimapAttacks'],
+                  hue='LeagueIndex', 
+                  palette='crest')
 p1.savefig('p1.png', dpi=300)
 plt.close(p1.fig)
 
-p2 = sea.pairplot(data=x_df, y_vars=['LeagueIndex'], x_vars=['MinimapRightClicks','NumberOfPACs','GapBetweenPACs','ActionLatency','ActionsInPAC',], hue='LeagueIndex', palette='crest')
+p2 = sea.pairplot(data=df, y_vars=['LeagueIndex'], x_vars=['MinimapRightClicks','NumberOfPACs','GapBetweenPACs','ActionLatency','ActionsInPAC',], hue='LeagueIndex', palette='crest')
 p2._legend.remove()
 p2.savefig('p2.png', dpi=300)
 plt.close(p2.fig)
 
-p3 = sea.pairplot(data=x_df, y_vars=['LeagueIndex'], x_vars=['TotalMapExplored','WorkersMade','UniqueUnitsMade','ComplexUnitsMade','ComplexAbilitiesUsed'], hue='LeagueIndex', palette='crest')
+p3 = sea.pairplot(data=df, y_vars=['LeagueIndex'], x_vars=['TotalMapExplored','WorkersMade','UniqueUnitsMade','ComplexUnitsMade','ComplexAbilitiesUsed'], hue='LeagueIndex', palette='crest')
 p3._legend.remove()
 p3.savefig('p3.png', dpi=300)
 plt.close(p3.fig)
@@ -95,19 +112,25 @@ plt.tight_layout()
 plt.show()
 
 #matrice di correlazione dopo aver pulito i dati dai valori nulli e dalle feature inutili
-sea.set(font_scale=1)
-cor_mat = x_df.corr()
+sea.set(font_scale=0.8)
+cor_mat = df.corr()
 h1 = sea.heatmap(cor_mat, annot=True)
+h1.set_title("Matrice di correlazione - feature selezionate", size=12)
+plt.setp(h1.get_xticklabels(), rotation=35, ha="right",
+         rotation_mode="anchor")
 plt.show()
 
 #controllo se il dataset è sbilanciato
-'''
-bins = np.linspace(0, 9, 30)
-plt.hist(x_df['LeagueIndex'], bins)
-plt.xticks(range(1, 9))
-plt.show()'''
 
-x_df.to_csv(r'dataset\Skillcraft_basic_preprocess.csv')
+u, inv = np.unique(df['LeagueIndex'], return_inverse=True)
+counts = np.bincount(inv)
+plt.bar(u, counts, width=0.3)
+plt.xticks(range(1, 9))
+plt.title("Bilanciamento del dataset")
+plt.show()
+
+
+df.to_csv(r'dataset\Skillcraft_basic_preprocess.csv')
 
 
 

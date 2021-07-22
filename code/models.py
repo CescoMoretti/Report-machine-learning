@@ -27,6 +27,8 @@ def Test_performance(pred,y_test, rank_names, name): #Funzione per valutare le p
     print ("{:<15} {:<20} {:<20} {:<20} {:<20}".format('Rank','Precision','Recall','F1 score','Support'))
     for k, v in report.items():    
         print ("{:<15} {:<20} {:<20} {:<20}  {:<20}".format(k, v['precision'],v['recall'],v['f1-score'],v['support']))
+    
+    #memorizzo i risultati per la valutazione
     dfr = pd.DataFrame(report)
     dfr.to_excel('risultati/'+name+'.xlsx')    
     df2 = pd.DataFrame({"name":[name],
@@ -36,8 +38,7 @@ def Test_performance(pred,y_test, rank_names, name): #Funzione per valutare le p
                         "precision macro": [report['macro avg']['precision']],
                         "recall weighted":[report['weighted avg']['recall']],
                         "recall macro": [report['macro avg']['recall']],                       
-                        })
-   
+                        })   
     result = result.append(df2, ignore_index = True)
  
 
