@@ -1,6 +1,15 @@
 \section{Discussione dei modelli}\label{sec:modelli}
 \normalsize
-sezione
+In questa sezione parleremo di modelli, dei quali ho selezionato e perché, dei loro punti di forza e infine dei loro svantaggi. \\*\\*
+Il nostro caso è un problema di classificazione con le seguenti caratteristiche:
+\begin{itemize}
+	\item Multiclasse, che vuol dire che la variabile da predire può assumere più di due valori possibili.
+	\item Lineare, anche se non tutte le feature hanno questo andamento, quelle principali a grandi linee lo seguono.
+	\item Ci sono diverse feature con un indice di correlazione tendenzialmente basso, per questo potrebbe essere utile scegliere dei modelli che non hanno bisogno di molta feature selection e ridurre di conseguenza il lavoro da fare in preprocessing.\\*
+	
+\end{itemize}
+I modelli scelti devono poter funzionare in queste condizioni, in più mi piacerebbe che almeno una parte dei modelli sia leggera in modo da trovare un’effettiva applicazione in caso di una possibile integrazione in un videogioco.
+
 \subsection{modello1}\label{ssec:modello1}
 \normalsize
 sottosezione

@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 from pandas.io.formats import style
 import seaborn as sea
 import warnings
-from matplotlib.colors import ListedColormap
-from sklearn.metrics import classification_report, f1_score, roc_curve, precision_recall_curve, roc_auc_score
+
+from sklearn.metrics import classification_report, f1_score, mean_squared_error
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.linear_model import  RidgeCV, LogisticRegression
 from sklearn.ensemble import RandomForestClassifier, AdaBoostRegressor, AdaBoostClassifier
@@ -49,19 +49,22 @@ def to_next_int(pred): #Funzione per arrotondare il risultato della ridge regres
 
 
 
-df = pd.read_csv('dataset/SkillCraft_basic_preprocess.csv', index_col=0)
-#df = pd.read_csv('dataset/SkillCraft1_Dataset.csv', na_values=["?"], index_col=0)
+df_tot = pd.read_csv('dataset/SkillCraft_basic_preprocess.csv', index_col=0)
 rank_names=['Bronzo','Argento','Oro', 'Platino', 'Diamante', 'Master','Grand Master', 'Pro']
 
 #Grafico bilanciamento dataset
-u, inv = np.unique(df['LeagueIndex'], return_inverse=True)
+u, inv = np.unique(df_tot['LeagueIndex'], return_inverse=True)
 counts = np.bincount(inv)
 plt.bar(u, counts, width=0.3)
 plt.xticks(range(1, 9))
 plt.show()
 
-y = df['LeagueIndex']
-X = df.drop(columns=['LeagueIndex'])
+df = pd.read_csv('dataset/SkillCraft_train.csv', index_col=0)
+y_train = df['LeagueIndex']
+X_train = df.drop(columns=['LeagueIndex'])
+df = pd.read_csv('dataset/SkillCraft_test.csv', index_col=0)
+y_test = df['LeagueIndex']
+X_test = df.drop(columns=['LeagueIndex'])
 
 #X = df.drop(columns=['LeagueIndex','Age', 'HoursPerWeek', 'TotalHours'])    # Provo a dargli in pasto il dataset con anche player ID
                                                                              # ma non cambia molto, i modelli che ho scelto fanno una buona selezione 
@@ -85,7 +88,7 @@ ridge_cv = RidgeCV(alphas=[ 0.0001, 0.001, 0.1, 1.0], cv=StratifiedKFold(3))
 ########################################################################################################################
 #                                          MODEL SELECTION CON CROSS-VALIDATION                                        #
 ########################################################################################################################
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, stratify=y, random_state=0)
+
 
 #Softmax Regression
 c_range = 10.0**np.arange(-5,1)
@@ -125,10 +128,12 @@ Test_performance(pred,y_test, rank_names, 'DT v1')
 
 rr_v1 = ridge_cv
 rr_v1.fit(X_train, y_train)
-score = rr_v1.score(X_test, y_test)
+
+pred = rr_v1.predict(X_test)
+mse = mean_squared_error(pred, y_test)
 
 print("\n\nRidge regression")
-print("il puntgeggio r2 migliore è: ", score)
+print("l'mse è: ", mse)
 print("calcolato con alpha uguale a: ", rr_v1.alpha_)
 #print(model_r.coef_)
 #f1 score train
@@ -138,7 +143,6 @@ score = f1_score(pred_train_r, y_train, average='weighted')
 print("f1 score weighted di train: ", score)
 
 #f1 score test
-pred = rr_v1.predict(X_test)
 round_pred = to_next_int(pred)
 Test_performance(round_pred, y_test, rank_names, 'RR v1')
 
@@ -146,10 +150,17 @@ Test_performance(round_pred, y_test, rank_names, 'RR v1')
 ########################################################################################################################
 #                                          PREPROCESSING DEI DATI E V2                                                 #
 ########################################################################################################################
+
+#Feature selection, inizialmente ho solo tolto le feature che ritenevo inutili, poi se verifico la presenza di
+# multi collinearità farò un ulteriore feature selection
+# PS: non penso che ci siano problemi di multicollinearità, gli altri algoritmi in ensemble hanno circa gli stessi
+# risultati rispetto a random forest che non soffre a causa della multicollinearità
+x_train_FS = X_train.pop['GameID']
+x_test_FS = X_test.pop['GameID']
 #Scaling del modello per ridurre la differenza di range tra le feature
 scaler = MinMaxScaler()
-x_train_scaled = scaler.fit_transform(X_train) 
-x_test_scaled = scaler.transform(X_test)
+x_train_scaled = scaler.fit_transform(x_train_FS) 
+x_test_scaled = scaler.transform(x_test_FS)
 
 #Softmax Regression con preprocessing
 c_range = 10.0**np.arange(-5,1)
@@ -168,7 +179,6 @@ print(' since these lead to F1-score = ', sr_v2.best_score_)
 print("test result")
 pred = sr_v2.predict(x_test_scaled)
 Test_performance(pred,y_test, rank_names, 'SR v2')
-
 #----------------------------------------------------------------------------------------------------------------------
 #Decision tree con preprocessing
 model = decision_tree
@@ -189,11 +199,12 @@ Test_performance(pred,y_test, rank_names, 'DT v2')
 #Ridge regression con processing
 rr_v2 = ridge_cv
 rr_v2.fit(x_train_scaled, y_train)
-score = rr_v2.score(x_test_scaled, y_test)
+pred = rr_v2.predict(X_test)
+mse = mean_squared_error(pred, y_test)
 
 
 print("\n\nRidge regression con preprocessing")
-print("il puntgeggio r2 migliore è: ", score)
+print("l'mse è: ", mse)
 print("alpha usato: ", rr_v2.alpha_)
 #print(model_r.coef_)
 
@@ -202,7 +213,7 @@ pred_train_r = to_next_int(pred_train)
 score = f1_score(pred_train_r, y_train, average='weighted')
 print("f1 score weighted di train: ", score)
 
-pred = rr_v2.predict(x_test_scaled)
+
 round_pred = to_next_int(pred)
 Test_performance(round_pred, y_test, rank_names, 'RR v2')
 
@@ -255,11 +266,12 @@ parameters = {"learning_rate": np.arange(1, 3, 1), "loss": ["linear", "square","
 
 rr_v3 = GridSearchCV(estimator=model, param_grid=parameters, cv=StratifiedKFold(5))
 rr_v3.fit(x_train_scaled, y_train)
-score = rr_v3.score(x_test_scaled, y_test)
+pred = rr_v3.predict(X_test)
+mse = mean_squared_error(pred, y_test)
 
 
 print("\n\nRidge regression boosted")
-print("il puntgeggio r2 migliore è: ", score)
+print("l'mse è: ", mse)
 print("loss usato: ", rr_v3.best_params_.get('loss'))
 print("learning_rate usato: ", rr_v3.best_params_.get('learning_rate'))
 pred_train = rr_v3.predict(x_train_scaled)
@@ -267,9 +279,7 @@ pred_train_r = to_next_int(pred_train)
 score = f1_score(pred_train_r, y_train, average='weighted')
 print("f1 score weighted di train: ", score)
 
-
-pred_test = rr_v3.predict(x_test_scaled)
-pred_test_r = to_next_int(pred_test)
+pred_test_r = to_next_int(pred)
 Test_performance(pred_test_r, y_test, rank_names, 'RR v3')
 
 

@@ -4,6 +4,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.image as mpimg
 import seaborn as sea
+from sklearn.model_selection import train_test_split
 
 #dataset: https://archive.ics.uci.edu/ml/datasets/SkillCraft1+Master+Table+Dataset
 
@@ -53,7 +54,7 @@ plt.show()
 #le colonne Age, HoursPerWeek e TotalHours sono nulle in tutte le righe della lega 8 e in più hanno dei livelli di correlazione con
 # LeagueIndex bassi, quindi decido di scartare le colonne. Tolgo anche GameId perchè non lo ritengo fuzionale all'algoritmo
 
-df = df.drop(columns=['Age', 'HoursPerWeek', 'TotalHours', 'GameID']) 
+df = df.drop(columns=['Age', 'HoursPerWeek', 'TotalHours']) 
 
 
 
@@ -62,22 +63,19 @@ print(df.isnull().sum())
 
 #Guardo che tipo di relazione hanno le features tra di loro
 
-'''sea.set(font_scale=0.5)
-p = sea.pairplot(df[['LeagueIndex','APM','SelectByHotkeys','AssignToHotkeys','UniqueHotkeys',
-                'MinimapAttacks','MinimapRightClicks','NumberOfPACs','GapBetweenPACs',
-                'ActionLatency','ActionsInPAC','TotalMapExplored','WorkersMade','UniqueUnitsMade',
-                'ComplexUnitsMade','ComplexAbilitiesUsed']],
+sea.set(font_scale=0.5)
+p = sea.pairplot(df[['LeagueIndex','APM','SelectByHotkeys', 'GapBetweenPACs','NumberOfPACs','ActionLatency',
+                #'MinimapAttacks','MinimapRightClicks','AssignToHotkeys',
+                #'ActionsInPAC','TotalMapExplored','WorkersMade','UniqueUnitsMade', 'UniqueHotkeys',
+                #'ComplexUnitsMade','ComplexAbilitiesUsed'
+                ]],
                  kind="reg",
                  diag_kind='kde',
                  plot_kws=dict(scatter_kws=dict(s=0.2),
                  line_kws={'color': 'red'}  )) 
 p.set(xticklabels=[])
 p.set(yticklabels=[])
-plt.show() # il grafico non è chiarissimo per via del grosso numero di feature,
-           # è meglio guardare la correlazione tra le feature tra di loro con una
-           # matrice di correlazione e il tipo di relazione con la variabile target
-           # in un pairplot a parte
-
+plt.show() 
 #plot della riga prima riga del pairplot
 sea.set(font_scale=0.5)
 p1 = sea.pairplot(data=df, y_vars=['LeagueIndex'],
@@ -96,7 +94,7 @@ p3 = sea.pairplot(data=df, y_vars=['LeagueIndex'], x_vars=['TotalMapExplored','W
 p3._legend.remove()
 p3.savefig('p3.png', dpi=300)
 plt.close(p3.fig)
-'''
+
 f, axes = plt.subplots(3, 1)
 
 axes[0].imshow(mpimg.imread('pairplot_parziale/p1.png'))
@@ -139,9 +137,17 @@ for bar in b:
 plt.show()
 
 
+# Ho diviso qui il database per mantenere una certa consistenza durante i test
+'''
+y = df['LeagueIndex']
+train, test = train_test_split(df, stratify=y, test_size=0.20, random_state=0)
+
+train.to_csv(r'dataset\Skillcraft_train.csv')
+test.to_csv(r'dataset\Skillcraft_test.csv')
+
 df.to_csv(r'dataset\Skillcraft_basic_preprocess.csv')
 
-
+'''
 
 
 
