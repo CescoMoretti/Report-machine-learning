@@ -1,15 +1,42 @@
 \section{Discussione dei modelli}\label{sec:modelli}
 \normalsize
-In questa sezione parleremo di modelli, dei quali ho selezionato e perché, dei loro punti di forza e infine dei loro svantaggi. \\*\\*
+In questa sezione parleremo dei modelli che ho selezionato e del motivo di queste scelte, evidenziando i loro punti di forza e le eventuali debolezze. \\*\\*
 Il nostro caso è un problema di classificazione con le seguenti caratteristiche:
 \begin{itemize}
-	\item Multiclasse, che vuol dire che la variabile da predire può assumere più di due valori possibili.
+	\item Multiclasse, significa che la variabile da predire può assumere più di due valori possibili.
 	\item Lineare, anche se non tutte le feature hanno questo andamento, quelle principali a grandi linee lo seguono.
-	\item Ci sono diverse feature con un indice di correlazione tendenzialmente basso, per questo potrebbe essere utile scegliere dei modelli che non hanno bisogno di molta feature selection e ridurre di conseguenza il lavoro da fare in preprocessing.\\*
+	\item Diverse feature hanno un indice di correlazione basso, per questo potrebbe essere utile scegliere dei modelli che non hanno bisogno di molta feature selection e ridurre di conseguenza il lavoro da fare in preprocessing.\\*
 	
 \end{itemize}
-I modelli scelti devono poter funzionare in queste condizioni, in più mi piacerebbe che almeno una parte dei modelli sia leggera in modo da trovare un’effettiva applicazione in caso di una possibile integrazione in un videogioco.
+I modelli scelti devono poter funzionare in queste condizioni, in più mi piacerebbe che almeno una parte dei modelli sia leggera in modo da trovare un'effettiva applicazione in caso di una possibile integrazione in un videogioco.
 
-\subsection{modello1}\label{ssec:modello1}
+\subsection{Modelli scelti}\label{ssec:modell}
 \normalsize
-sottosezione
+Nella scelta dei modello ho cercato di selezionarne diversi facendo attenzione a dare un diverso scopo ad ognuno di loro. 
+I modelli scelti sono:
+\begin{itemize}
+	\item Softmax regression, con lo scopo di fare da base di paragone per altri modelli.
+	\item Decision tree classifier, un modello robusto semplice che dovrebbe funzionare bene con questo tipo di dati.
+	\item Ridge regression arrotondando la previsione alla classe più vicina, questa è una scelta abbastanza originale, ma dettata da alcune motivazioni che saranno trattate in seguito.
+\end{itemize}
+Ho deciso di usare sempre lo stesso pre-processing, che consiste in uno scaling con una feature selection molto semplice, questo perché tutti i modelli scelti fanno una certa quantità di feature selection in autonomia. In particolare, ho deciso di togliere solo Game ID, perché che lo ritengo completamente scollegato dalla classificazione che stiamo facendo. Mentre lo scaling applicato è uno scaling MinMax. \\*
+
+Per gli ensemble invece, ho usato un bagging del Decision tree chiamato Random Forest Classificator, che è un modello robusto e molto usato, anche se per realizzarlo si sacrifica l’interpretabilità del Decision tree. Mentre per gli altri due modelli, visto che hanno una varianza bassa, ho optato per un ensemble di Boosting.\\*
+
+\textbf{Softmax regression} \\*\\*
+È una versione della logistic regression che usa la curva softmax invece che la sigmoide. Questo le permette di dare in output un vettore distribuito secondo una legge di probabilità i cui elementi hanno somma uguale a uno. In questo modo è possibile estendere la logistic regression anche a casi di classificazione multiclasse, che normalmente non potrebbero essere risolti con questo modello. \\*\\*
+La softmax regression segue un comportamento simile alla linear regression con gradient descent, il che comporta che i pesi devono essere calcolati in modo iterativo. Quindi se fosse necessario calcolare tanti modelli, per la cross validation o per l'ensemble, potrebbe diventare pesante da processare.\\*
+
+\textbf{Decision tree classifier}\\*\\*
+Questo modello è un modello di classificazione semplice da capire e per questo anche da interpretare. Consiste in uno schema costituito da nodi, nodi terminali o foglie e rami, da ogni nodo partono due rami e per questo il grafico prende la forma di un albero, da cui ne deriva il nome. Dentro ad ogni nodo è contenuto un test che viene usato per decidere quale ramo percorrere, questo viene fatto per diversi nodi fino a che non si arriva a un nodo terminale o foglia che contiene la classe selezionata per quel campione.\\*\\*
+Una volta addestrato l'albero, è facile classificare un nuovo elemento perché basta percorrere l'albero in base alle caratteristiche dell'elemento in questione.\\*
+Ho scelto questo modello perché è un classificatore molto efficiente e in più penso che la sua versione in ensemble, il Random forest classifier, sia il modello migliore per questo tipo di studio vista la sua semplicità e resistenza vari tipi di anomalie sui dati.\\*
+
+\textbf{Ridge regression con arrotondamento all'intero più vicino} \\*\\*
+La ridge regression è un modello di regressione abbastanza usato spesso per la sua capacità naturale fare feature selection, inoltre ha il pregio di poter essere usata in ciclo chiuso, il che vuol dire che può arrivare a una soluzione in modo non iterativo e quindi molto veloce.\\*\\*
+Per quanto questa sembri una scelta fuori luogo, ci sono alcune motivazioni per cui penso che questo modello possa essere una valida aggiunta a questa analisi.\\*\\*
+In primo luogo, SkillCraft è classificato dai creatori come un dataset per svolgere task di regressione e quindi volevo provare a rispettare questo limite almeno con uno dei modelli. \\*\\*
+L'altro aspetto di questa scelta, secondo me il più interessante, è che questa analisi non è proprio il classico esempio di classificazione multinomiale, dove un errore nel classificare è solo fine a se stesso. In questo caso sono convinto che, se calato in certi contesti, anche una classificazione sbagliata possa comunque trovare delle applicazioni pratiche e questo è dovuto al fatto che le classi di quest'analisi hanno un aspetto gerarchico.\\*
+Ad esempio, se classificando il giocatore A della lega Bronzo risulta che la sua classe di abilità è 7, ovvero la lega Grand Master, allora è possibile fare l’assunzione che, anche se la predizione fosse sbagliata, non lo sia di tanto, e quindi questo giocatore è troppo forte per la categoria in cui si trova.\\*
+	
+Questa assunzione poteva essere fatta anche con la softmax regression, ma in quel caso non avremmo il pregio di poter risolvere il problema in forma chiusa, che è un grosso vantaggio se si pensa alle applicazioni pratiche che potrebbe avere questa classificazione. In più, il fatto che questo modello sia una regressione, permette di avere facile accesso alle metriche di questa categoria, usate spesso per verificare la dimensione dell'errore commesso.

@@ -1,6 +1,121 @@
 \section{Dettagli implementativi}\label{sec:dettagli}
 \normalsize
-sezione
-\subsection{dettaglio1}\label{ssec:d1}
+In questa sezione saranno trattati i dettagli implementativi e le scelte che ho fatto durante la costruzione di questo progetto.\\*\\*
+Il progetto è scritto in Phyton e ho fatto largo uso della libreria sklearm, una libreria per il machine learning molto usata in questo ambito. All’interno di essa si possono trovare la maggior parte delle funzioni necessarie per un progetto di learning. \\*\\*
+In questo capitolo analizzeremo, prima quali tecniche sono state usate per dividere i dati, poi l’implementazione di tutti i modelli in tutte le loro versioni e infine quali metriche sono state usate per valutare i risultati.\\*\\*
+Tutti i modelli sono stati implementati in tre versioni:
+\begin{itemize}
+	\item Versione 1, che è una versione base costruita sui dati originali
+	\item Versione 2, che è una versione base costruita sui dati pre-processati. In tutti e tre i modelli sono state usate le stesse tecniche di pre-processing in modo da poter fare un confronto più attendibile.
+	\item Versione 3, che è una versione costruita sull’ensemble della versione migliore tra le due precedenti.
+\end{itemize}
+In tutte le versioni è stata usata la cross validation per scegliere i migliori iper-parametri.
+\subsection{Suddivisione dati e Cross validation}\label{SudCros}
 \normalsize
-sottosezione
+Come visto nell’analisi dei dati, il data set è sbilanciato, quindi ho dovuto prestare attenzione ad alcuni dettagli in tutte le operazioni che prevedevano la suddivisione dei dati in sottogruppi.\\*\\*
+In particolare, ho dovuto usare una tecnica chiamata stratificazione che serve ad assicurarsi, ogni volta che si divide il dataset in sottoinsiemi, che il numero di elementi di ogni classe all'interno del sottoinsieme sia proporzionale a quello del dataset iniziale. \\*\\*
+Inoltre, ho deciso di suddividere il dataset nelle due parti di train e di test prima di iniziare l'implementazione dei modelli. Questa operazione è stata necessaria perché certe classi hanno una numerosità molto bassa.
+Se non avessi preso questa precauzione, il risultato dell'addestramento sarebbe variato a seconda di quali elementi venivano selezionati e questo avrebbe reso difficile capire quale effetto era causato del cambiamento dei parametri delle funzioni e quale dalla differente selezione dei campioni.\\*\\*
+Durante l'addestramento dei modelli ho invece usato una tecnica chiamata k-fold per scegliere gli iper-parametri dei modelli. Il suo funzionamento è il seguente:
+\begin{itemize}
+	\item Divide i dati di train in k parti.
+	\item Fa l'addestramento su k-1 parti .
+	\item Usa la parte esclusa dall'addestramento per la validazione.
+	\item Ripete k volte, ovvero fino a che tutte le parti sono state usate per la validazione una volta.
+\end{itemize}
+Questo procedimento permette di calcolare le prestazioni di un modello in modo migliore e meno dipendente dai dati che vengono selezionati. Per trovare gli iper-parametri migliori basta ripetere questo procedimento per ogni parametro che si vuole trovare e alla fine si selezionano gli iper-parametri con le prestazioni migliori.\\*\\*
+Per implementare sia la suddivisione nelle parti di test e train, che la cross validazione per la selezione del modello, ci sono delle funzioni già fatte in sklearn.\\*
+
+Per la suddivisione del dataset ho usato Train test split. Nel nostro caso è importante aggiungere l’opzione stratify con la variabile target, in questo modo si avrà una distribuzione delle classi circa proporzionale a quella dell’intero dataset. Un'altra scelta importante da prendere quando si usa questa funzione è la dimensione di test e train set. In questo caso ho scelto di impostare il test set al 20 \% del dataset totale, questo perché certe classi hanno una numerosità molto bassa e, se avessi scelto una dimensione troppo grossa del test set, non ci sarebbero stati abbastanza elementi di quelle classi per un buon addestramento dei modelli. \\*
+
+Per implementare la cross validazione invece, ho usato principalmente due funzioni, la prima per la Ridge regression chiamata RidgeCV , che è una funzione che costruisce il modello usando la cross validazione per la ricerca degli iper-parametri. \\*\\*
+Per tutti gli altri modelli ho usato una funzione chiamata GridSearchCV, anch'essa usata per la selezione degli iper-parametri dei modelli. In entrambe le funzioni ho impostato come tipo di cross validation la StratifiedKFold, che è la versione stratificata di k-fold. Dopo diverse prove ho visto che il numero di fold ideale è 5, avrei preferito un numero più alto, ma il numero di campioni delle classi 7 e 8 sarebbe stato troppo basso per poter ottenere una classificazione efficace.\\*
+ 
+In più, nella funzione GridSearchCV ho usato come metrica per la scelta dei parametri migliori l’F1 score weighted, che è una metrica abbastanza completa, in particolare tiene conto anche dello sbilanciamento dei dataset, che risulta ideale per il nostro caso.
+ 
+\subsection{Softmax regression}\label{softmax}
+\normalsize
+Le prestazioni della Softmax regression dipendono principalmente dai parametri che vengono usati per la regolarizzazione, penalty e costo. Questa opzione permette aggiunge di un vincolo di costo totale che può essere basato sulla Ridge o sulla Lasso regression, questo permette di ridurre il peso delle variabili marginali che altrimenti porterebbero a una varianza del modello troppo alta.\\*
+
+Per calibrare la regolarizzazione si usano due parametri:
+\begin{itemize}
+	\item Penalty, che sceglie il tipo di regolarizzazione da applicare. Può essere l1 (Lasso) o l2(Ridge), la differenza tra le due è che la l1 può azzerare il peso di alcune feature, di fatto eliminandole, mentre la Ridge può soltanto renderle molto piccole.
+	\item C, che è il vincolo sul costo totale, ovvero il costo totale che si può raggiungere.
+
+\end{itemize}
+
+Per la C ho messo tra le alternative 1 e alcuni sui sottomultipli. Per il tipo di penalty invece il discorso è un po' più complesso, inizialmente ho messo tra le possibili alternative sia l1 che l2, ma dopo diverse prove ho deciso di lasciare solo l2 e togliere l1. I motivi che mi hanno portato a questa scelta sono:
+
+\begin{itemize}
+	\item Entrambe le penalty l1 e l2 avevano prestazioni molto simili per le versioni  1 e 2.
+	\item Non ci sono così tante features da giustificare l'eventuale eliminazione di alcune di esse.
+	\item Infine, la versione 3 di ensemble aveva prestazioni maggiori se il modello su cui era costruita usava la penalty l2.
+
+\end{itemize}
+
+Dopo diverse prove per verificare che queste osservazioni erano corrette, ho deciso di togliere la penalty l1 dai modelli. \\*
+
+Approfondiamo ora come sono state costruite le versioni 2 e 3. Queste due versioni aggiungono diverse tecniche per cercare di migliorare il risultato della predizione.\\*\\*
+La versione 2 usa dei dati pre-processati, come anticipato prima il preprocessing usato è il Min Max Scaling, che consiste nel trasformare i dati in modo che stiano dentro l'intervallo [0,1], ma mantenendo le proporzioni generali dei valori nell'insieme. Oltre a questo, ho anche tolto la feature GameID perché la ritengo inutile ai fini di questa classificazione. \\*\\*
+La versione 3 è composta dall’ensemble della migliore tra i due casi precedenti e nella nostra situazione la versione 2 è risultata essere migliore, quindi il modello di ensamble è stato costruito con essa.\\*
+Il tipo di ensemble scelto è stato il Boosting, questo perché per si adatta meglio ai modelli come che hanno poca varianza, come questo caso. Il Boosting consiste nell'addestrare diversi modelli in serie e aggiornare i pesi dopo ogni addestramento in base a come si comporta il modello nuovo rispetto a quello vecchio. Lo svantaggio di questo modello è che addestrando i modelli in serie è più lento rispetto al Bagging dove i modelli possono essere addestrati in parallelo.\\*
+Per realizzarlo ho usato AdaBoostClassifier, una funzione di sklearn che permette di costruire ensemble di boosting a partire da altri modelli. \\*
+
+I parametri iniziali che ho fissato sono: \\*
+\begin{itemize}
+	\item Il modello, il modello dalla versione 2 con i parametri migliori
+	\item Il numero di stimatori. Dove possibile ho cercato di inserire questo parametro nella cross validazione del modello, ma in questo caso rendeva l'addestramento troppo lento. Il valore che ho scelto è 50, ho visto che questo numero mi permette di avere una via di mezzo tra velocità di training e performance.
+	\item Il random state, che serve a rendere la selezione randomica dei dati riproducibile tra un'esecuzione e l'altra.
+\end{itemize}
+
+Invece l'unico parametro che ho variato durante la cross validation è il learning rate, che indica il peso di quanto i parametri di un nuovo modello possono influire nella modifica dei parametri del modello precedentemente trovato.\\*
+
+\subsection{Decision tree classification}\label{tree}
+\normalsize
+Per quanto riguarda il decision tree ho deciso di impostare di base il parametro di class weight come balanced, una scelta necessaria visto che il dataset è sbilanciato.\\*
+Mentre durante la cross validation del modello ho deciso di provare diverse profondità massime dell’albero e  diversi criteri di valutazione. \\*
+
+Per quanto riguarda la profondità massima ho deciso di provare tutte le decine da 10 fino a 100, anche se possono sembrare tanti parametri da testare, il Decision tree ha un addestramento abbastanza veloce, quindi non ci sono grossi problemi di lentezza.\\*
+Per i criteri di valutazione invece ho deciso di provarne due:
+
+\begin{itemize}
+	\item Il coefficiente di Gini, che è misura la disuguaglianza della distribuzione. Questo viene usato all'interno delle foglie dell'albero per capire quanti elementi vengono messi dentro una classe anche se non le appartengono.
+	\item L'entropia, anche questo indice è usato per calcolare l'omogeneità dei campioni classificati all’interno di una foglia.
+
+\end{itemize}
+
+Nella versione 2 ho usato lo stesso tipo di pre-processing usato anche per la Softmax regression. Questo perché gli alberi decisionali non hanno grosse difficoltà ad usare dati non pre-processati, soprattutto in casi come questo dove le feature sono poche, quindi come preprocessing penso sia sufficiente uno scaling dei dati. \\*
+Anche in questa versione ho provato gli stessi iper-parametri della versione 1 tramite cross validation.\\*\\*
+Il tipo di ensemble del decison tree che ho deciso di usare è la Random Forest Classification, che usa diversi alberi decisionali generati in modo randomico e non legati tra loro per produrre una lista di risultati, il cui risultato finale sarà quello più numeroso. Visto che gli alberi possono essere addestrati in parallelo, qui ho potuto mettere un numero maggiore di stimatori. \\*
+Il modello che ho usato in questo caso è il primo, ovvero la versione con i dati originali, questo perché è risultata essere la migliore, ma dei suoi parametri ho deciso di tenere solo il criterio di valutazione e ricalcolare il resto.\\*\\*
+I parametri usati nella cross validation sono:
+\begin{itemize}
+	\item Numero di stimatori, ho messo con 100, 200 e 300 perché ho osservato che quasi sempre viene messo a 200 e volevo dargli un po' di spazio per variare in caso i dati lo richiedano.
+	\item La profondità degli alberi, in questo caso invece che prendere quella del modello migliore ho deciso di lasciarla variare per dare un po' più di elasticità al modello.
+\end{itemize}
+
+\subsection{Ridge regression}\label{Ridge}
+\normalsize
+Per realizzare questo modello ho creato prima un modello di regressione con la funzione RidgeCV, che è una funzione di sklearn che permette di realizzare modelli di Ridge regression con la cross validation integrata. Poi ho arrotondato i risultati della regressione all’intero più vicino con la funzione rint di numpy, una libreria usata principalmente per gestire matrici e array multidimensionali. Infine ho usato la funzione clip di numpy, ovvero una funzione che scelto un limite massimo e uno minimo riporta tutti i valori dell'insieme bersaglio all'interno dell'intervallo compreso tra il massimo e il minimo, nel nostro caso [1,8].\\*\\*
+Per realizzare la cross validation in questo modello viene usato come criterio di valutazione R2 score, visto che non è un modello di classificazione non è possibile usare F1 score per valutare le prestazioni.\\*
+Come parametri durante la cross validation del modello ho deciso di usare solo Alpha, che è uguale 1/2C, dove C è il vincolo di costo, questo permette al modello di tarare i parametri dando importanza solo a quelli significativi.\\*
+Come preprocessing ho usato sempre lo stesso, visto che questo modello ha caratteristiche simili a quelli precedenti, ovvero di non aver bisogno di molta features selection.\\*
+Per il modello in ensemble ho deciso di usare un modello di Boosting, come nella Softmax Regression, perché anche questo modello è caratterizzato da una bassa varianza.\\*
+In questo caso ho usato una funzione chiamata AdaBoostRegressor e come parametro ho inserito soltanto il learning rate. Anche questo modello ha il problemadi dover calcolare tutti gli stimatori in serie, e se si aggiungono tanti parametri alla cross validazione il training diventa lento.
+\subsection{Metriche di valutazione}\label{valutazione}
+\normalsize
+
+Per valutare le prestazioni dei modelli è necessario usare le metriche corrette in base alla situazione in cui ci si trova.\\*\\*
+Le metriche che ho scelto sono:
+\begin{itemize}
+	\item Precision, rappresenta la percentuale di predizioni positive corrette rispetto al numero totale di predizioni per quella classe.
+	\item Racall, rappresenta la percentuale di predizioni positive corrette rispetto alla numerosità totale di quella classe.
+	\item F1 score, è una metrica più completa che viene costruita sulla base di precision e recall.
+
+\end{itemize}
+Per ognuna di queste ho preso sia la versione weighted che quella macro. Quella weighted considera il peso della numerosità di quel tipo di campione, quindi dà un’indicazione delle capacità generali del modello.\\
+ La macro invece dà lo stesso peso a ogni classe, anche se la numerosità è molto bassa, questo permette di riflettere la capacità del modello di classificare tutte le classi\\*\\*
+ Tutte queste metriche vengono fornite da una funzione di sklearn chiamata classification report, che fornisce anche i valori di tutte queste metriche per ogni classe, un dettaglio che fa sempre comodo avere. Per poterla usare meglio ho creato una funzione che usa il classification report e toglie le metriche che non volevo avere. In più, in questa funzione i risultati vengono memorizzati in due modi diversi, uno definitivo che salva il report in formato xlsx e l’altro salva i dati in un dizionario che saranno usati per la successiva analisi dei risultati. \\*\\*
+ Oltre a queste metriche ho deciso di raccogliere i tempi di training per verificare la velocità dei modelli e poterli paragonare anche sotto questo punto di vista.\\*\\*
+Per paragonare meglio le prestazioni dei modelli ho deciso di graficare i risultati in modo che siano più facili da consultare, in particolare ho fatto due grafici: un grafico contenente le metriche e un grafico dei tempi di addestramento.\\*\\*
+
